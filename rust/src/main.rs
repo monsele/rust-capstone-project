@@ -46,18 +46,22 @@ fn main() -> bitcoincore_rpc::Result<()> {
 
     let wallets = rpc.list_wallets()?;
 
-   
-    if !wallets.contains(&miner_wallet.to_string()) && 
-       rpc.call::<serde_json::Value>("loadwallet", &[json!(miner_wallet)]).is_err() {
+    if !wallets.contains(&miner_wallet.to_string())
+        && rpc
+            .call::<serde_json::Value>("loadwallet", &[json!(miner_wallet)])
+            .is_err()
+    {
         rpc.call::<serde_json::Value>(
             "createwallet",
             &[json!(miner_wallet), json!(false), json!(false)],
         )?;
     }
 
-   
-    if !wallets.contains(&trader_wallet.to_string()) && 
-       rpc.call::<serde_json::Value>("loadwallet", &[json!(trader_wallet)]).is_err() {
+    if !wallets.contains(&trader_wallet.to_string())
+        && rpc
+            .call::<serde_json::Value>("loadwallet", &[json!(trader_wallet)])
+            .is_err()
+    {
         rpc.call::<serde_json::Value>(
             "createwallet",
             &[json!(trader_wallet), json!(false), json!(false)],
@@ -109,8 +113,6 @@ fn main() -> bitcoincore_rpc::Result<()> {
         miner_rpc.call::<String>("sendtoaddress", &[json!(trader_addr.clone()), json!(20.0)])?;
     println!("Sent 20 BTC. TXID: {}", txid);
 
-    // After sending 20 BTC but before mining confirmation block:
-    // Check transaction in mempool
     let mempool_info = rpc.call::<serde_json::Value>("getmempoolentry", &[json!(txid)])?;
     println!("Transaction in mempool: {:?}", mempool_info);
 
@@ -140,7 +142,7 @@ fn main() -> bitcoincore_rpc::Result<()> {
     let input_detail =
         rpc.call::<serde_json::Value>("getrawtransaction", &[json!(input_txid), json!(true)])?;
     let vout_obj = &input_detail["vout"][input_vout as usize]["scriptPubKey"];
-    
+
     let input_addr = vout_obj
         .get("address")
         .and_then(|a| a.as_str())
@@ -163,7 +165,7 @@ fn main() -> bitcoincore_rpc::Result<()> {
 
     for vout in vouts {
         let value = vout["value"].as_f64().unwrap();
-        // Fix 2 & 3: Replace arr.get(0) with arr.first() and empty string comparison
+
         let address = vout["scriptPubKey"]
             .get("address")
             .and_then(|a| a.as_str())
