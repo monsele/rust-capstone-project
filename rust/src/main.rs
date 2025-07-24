@@ -69,12 +69,12 @@ fn main() -> bitcoincore_rpc::Result<()> {
     }
 
     let miner_rpc = Client::new(
-        &format!("{}/wallet/{}", RPC_URL, miner_wallet),
+        &format!("{RPC_URL}/wallet/{miner_wallet}"),
         Auth::UserPass(RPC_USER.to_owned(), RPC_PASS.to_owned()),
     )?;
 
     let trader_rpc = Client::new(
-        &format!("{}/wallet/{}", RPC_URL, trader_wallet),
+        &format!("{RPC_URL}/wallet/{trader_wallet}"),
         Auth::UserPass(RPC_USER.to_owned(), RPC_PASS.to_owned()),
     )?;
 
@@ -95,7 +95,7 @@ fn main() -> bitcoincore_rpc::Result<()> {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     let initial_balance = miner_rpc.call::<f64>("getbalance", &[])?;
-    println!("Initial miner balance: {} BTC", initial_balance);
+    println!("Initial miner balance: {initial_balance} BTC");
 
     let consolidate_addr = miner_rpc.call::<String>("getnewaddress", &[json!("Consolidate")])?;
     miner_rpc.call::<String>(
@@ -111,10 +111,9 @@ fn main() -> bitcoincore_rpc::Result<()> {
     std::thread::sleep(std::time::Duration::from_secs(1));
     let txid =
         miner_rpc.call::<String>("sendtoaddress", &[json!(trader_addr.clone()), json!(20.0)])?;
-    println!("Sent 20 BTC. TXID: {}", txid);
-
-    let mempool_info = rpc.call::<serde_json::Value>("getmempoolentry", &[json!(txid)])?;
-    println!("Transaction in mempool: {:?}", mempool_info);
+    println!("Sent 20 BTC. TXID: {txid}");
+    let mempool_info = rpc.call::<serde_json::Value>("getmempoolentry", &[json!(txid.clone())]);
+    println!("Transaction in mempool: {mempool_info:?}");
 
     let confirm_block =
         rpc.call::<Vec<String>>("generatetoaddress", &[json!(1), json!(miner_addr.clone())])?;
@@ -189,16 +188,16 @@ fn main() -> bitcoincore_rpc::Result<()> {
     let fee = input_amt - output_sum;
 
     let mut out = File::create("../out.txt").expect("Failed to create output file");
-    writeln!(out, "{}", txid).unwrap();
-    writeln!(out, "{}", input_addr).unwrap();
-    writeln!(out, "{}", input_amt).unwrap();
-    writeln!(out, "{}", trader_addr).unwrap();
-    writeln!(out, "{}", trader_output_amt).unwrap();
-    writeln!(out, "{}", miner_change_addr).unwrap();
-    writeln!(out, "{}", miner_change_amt).unwrap();
-    writeln!(out, "{:.8}", fee).unwrap();
-    writeln!(out, "{}", block_height).unwrap();
-    writeln!(out, "{}", blockhash).unwrap();
+    writeln!(out, "{txid}").unwrap();
+    writeln!(out, "{input_addr}").unwrap();
+    writeln!(out, "{input_amt}").unwrap();
+    writeln!(out, "{trader_addr}").unwrap();
+    writeln!(out, "{trader_output_amt}").unwrap();
+    writeln!(out, "{miner_change_addr}").unwrap();
+    writeln!(out, "{miner_change_amt}").unwrap();
+    writeln!(out, "{fee:.8}").unwrap();
+    writeln!(out, "{block_height}").unwrap();
+    writeln!(out, "{blockhash}").unwrap();
 
     println!("Successfully wrote transaction details to out.txt");
 
