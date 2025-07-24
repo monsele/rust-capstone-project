@@ -82,7 +82,6 @@ fn main() -> bitcoincore_rpc::Result<()> {
 
     let miner_addr = miner_rpc.call::<String>("getnewaddress", &[json!("Mining Reward")])?;
     let trader_addr = trader_rpc.call::<String>("getnewaddress", &[json!("Received")])?;
-
     let blocks = rpc.call::<Vec<String>>(
         "generatetoaddress",
         &[json!(101), json!(miner_addr.clone())],
