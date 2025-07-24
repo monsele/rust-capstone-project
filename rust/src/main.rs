@@ -46,28 +46,22 @@ fn main() -> bitcoincore_rpc::Result<()> {
 
     let wallets = rpc.list_wallets()?;
 
-    if !wallets.contains(&miner_wallet.to_string()) {
-        if rpc
-            .call::<serde_json::Value>("loadwallet", &[json!(miner_wallet)])
-            .is_err()
-        {
-            rpc.call::<serde_json::Value>(
-                "createwallet",
-                &[json!(miner_wallet), json!(false), json!(false)],
-            )?;
-        }
+   
+    if !wallets.contains(&miner_wallet.to_string()) && 
+       rpc.call::<serde_json::Value>("loadwallet", &[json!(miner_wallet)]).is_err() {
+        rpc.call::<serde_json::Value>(
+            "createwallet",
+            &[json!(miner_wallet), json!(false), json!(false)],
+        )?;
     }
 
-    if !wallets.contains(&trader_wallet.to_string()) {
-        if rpc
-            .call::<serde_json::Value>("loadwallet", &[json!(trader_wallet)])
-            .is_err()
-        {
-            rpc.call::<serde_json::Value>(
-                "createwallet",
-                &[json!(trader_wallet), json!(false), json!(false)],
-            )?;
-        }
+   
+    if !wallets.contains(&trader_wallet.to_string()) && 
+       rpc.call::<serde_json::Value>("loadwallet", &[json!(trader_wallet)]).is_err() {
+        rpc.call::<serde_json::Value>(
+            "createwallet",
+            &[json!(trader_wallet), json!(false), json!(false)],
+        )?;
     }
 
     let miner_rpc = Client::new(
@@ -146,6 +140,7 @@ fn main() -> bitcoincore_rpc::Result<()> {
     let input_detail =
         rpc.call::<serde_json::Value>("getrawtransaction", &[json!(input_txid), json!(true)])?;
     let vout_obj = &input_detail["vout"][input_vout as usize]["scriptPubKey"];
+    
     let input_addr = vout_obj
         .get("address")
         .and_then(|a| a.as_str())
@@ -153,7 +148,7 @@ fn main() -> bitcoincore_rpc::Result<()> {
             vout_obj
                 .get("addresses")
                 .and_then(|addrs| addrs.as_array())
-                .and_then(|arr| arr.get(0))
+                .and_then(|arr| arr.first())
                 .and_then(|a| a.as_str())
         })
         .unwrap_or("<unknown address>");
@@ -168,6 +163,7 @@ fn main() -> bitcoincore_rpc::Result<()> {
 
     for vout in vouts {
         let value = vout["value"].as_f64().unwrap();
+        // Fix 2 & 3: Replace arr.get(0) with arr.first() and empty string comparison
         let address = vout["scriptPubKey"]
             .get("address")
             .and_then(|a| a.as_str())
@@ -175,13 +171,13 @@ fn main() -> bitcoincore_rpc::Result<()> {
                 vout["scriptPubKey"]
                     .get("addresses")
                     .and_then(|addrs| addrs.as_array())
-                    .and_then(|arr| arr.get(0))
+                    .and_then(|arr| arr.first())
                     .and_then(|a| a.as_str())
             })
             .unwrap_or("");
         if address == trader_addr {
             trader_output_amt = value;
-        } else if address != "" && address != trader_addr {
+        } else if !address.is_empty() && address != trader_addr {
             miner_change_amt = value;
             miner_change_addr = address.to_string();
         }
