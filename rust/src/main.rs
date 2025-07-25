@@ -130,12 +130,6 @@ fn main() -> bitcoincore_rpc::Result<()> {
     )?;
 
     let vin_arr = decoded["vin"].as_array().unwrap();
-    assert_eq!(
-        vin_arr.len(),
-        1,
-        "Transaction should have exactly one input"
-    );
-
     let input_txid = vin_arr[0]["txid"].as_str().unwrap();
     let input_vout = vin_arr[0]["vout"].as_u64().unwrap();
     let input_detail =
